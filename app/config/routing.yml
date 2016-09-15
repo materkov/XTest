@@ -1,0 +1,4 @@
+app:
+    type: rest
+    resource: AppBundle\Controller\DefaultController
+
