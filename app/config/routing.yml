@@ -2,3 +2,6 @@ app:
     type: rest
     resource: AppBundle\Controller\DefaultController
 
+app_upload:
+    type: annotation
+    resource: AppBundle\Controller\UploadController

@@ -58,8 +58,16 @@ class FileManager
         return $mime;
     }
 
-    public function saveFile($file, $dir, $name)
+    public function saveFile($path)
     {
-        $file->move($dir, $name);
+        $putData = fopen("php://input", "r");
+        $fp = fopen($path, "w");
+
+        while ($data = fread($putData, 1024)) {
+            fwrite($fp, $data);
+        }
+
+        fclose($fp);
+        fclose($putData);
     }
 }

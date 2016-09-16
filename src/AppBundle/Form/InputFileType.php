@@ -40,23 +40,17 @@ class InputFileType extends AbstractType
                         }
                     })
                 )
-            ))
-            ->add('content', FileType::class, array(
-                'constraints' => new NotBlank()
             ));
+            //->add('content', FileType::class, array(
+            //    'constraints' => new NotBlank()
+            //));
     }
 
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
+            'method' => 'PUT',
             'allow_extra_fields' => true,
         ));
-    }
-
-    public function validate($object, ExecutionContextInterface $context, $payload)
-    {
-        $context->buildViolation('This name sounds totally fake!')
-            ->atPath('filename')
-            ->addViolation();
     }
 }

@@ -92,6 +92,26 @@ class DefaultController extends FOSRestController
             );
             return $this->handleView($this->view($response, 400));
         }
-
     }
+
+//    public function putFileAction($filename, Request $request)
+//    {
+//        $request->request->add(array('filename' => $filename));
+//        $form = $this->createForm(InputFileType::class);
+//        $form->handleRequest($request);
+//
+//        if ($form->isValid()) {
+//            $manager = $this->get('file_manager');
+//            $manager->saveFile($form->getData()['content'], self::DIR, $filename);
+//
+//            return $this->handleView($this->view(null, 201));
+//        }
+//        else {
+//            $response = array(
+//                'error' => 'Bad request',
+//                'details' => $form->getErrors()
+//            );
+//            return $this->handleView($this->view($response, 400));
+//        }
+//    }
 }

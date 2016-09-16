@@ -7,6 +7,8 @@ use AppBundle\Utils\FileManager;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\Loader;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -19,24 +21,49 @@ class DefaultControllerTest extends WebTestCase
      */
     private $client;
 
+    /**
+     * @var EntityManager
+     */
+    private $em;
+
+    /**
+     * Создает тестового юзера TestUser:TestPassword
+     */
+    private function createTestUser()
+    {
+        $factory = $this->client->getContainer()->get('security.encoder_factory');
+        $userManager = $this->client->getContainer()->get('fos_user.user_manager');
+
+        $user = $userManager->findUserByUsername('test_user');
+        if ($user) {
+            if (!$factory->getEncoder($user)->isPasswordValid($user->getPassword(), 'test_password', $user->getSalt())) {
+                $user->setPlainPassword('test_password');
+                $userManager->updateUser($user);
+            }
+        }
+        else {
+            $user = $userManager->createUser();
+            $user->setUsername('test_user');
+            $user->setEmail('test_user@email.com');
+            $user->setPlainPassword('test_password');
+            $user->setEnabled(true);
+            $userManager->updateUser($user);
+        }
+    }
+
     public function setUp()
     {
         $this->client = static::createClient(array(), array(
-            'PHP_AUTH_USER' => 'user',
-            'PHP_AUTH_PW'   => 'password',
+            'PHP_AUTH_USER' => 'test_user',
+            'PHP_AUTH_PW'   => 'test_password',
         ));
-        $em = $this->client->getContainer()->get('doctrine')->getManager();
 
-        $fixture = new LoadUserData();
-        $fixture->setContainer($this->client->getContainer());
-        //$fixture->load($em);
+        $this->em = $this->client->getContainer()->get('doctrine.orm.entity_manager');
+        $this->createTestUser();
+    }
 
-        $loader = new Loader();
-        $loader->addFixture($fixture);
-
-        $purger = new ORMPurger();
-        $executor = new ORMExecutor($em, $purger);
-        $executor->execute($loader->getFixtures());
+    public function tearDown()
+    {
     }
 
     public function testFilesList()
@@ -47,8 +74,7 @@ class DefaultControllerTest extends WebTestCase
         $fakeManager->expects($this->once())
             ->method('listDir')
             ->with('C:\\test')
-            ->willReturn(['asd.ttt'])
-        ;
+            ->willReturn(['asd.ttt']);
 
         $this->client->getContainer()->set('file_manager', $fakeManager);
         $this->client->request('GET', '/files');
@@ -67,8 +93,7 @@ class DefaultControllerTest extends WebTestCase
         $fakeManager->expects($this->once())
             ->method('getMeta')
             ->with('C:\\test\\myfile')
-            ->willReturn(['x' => 'y'])
-        ;
+            ->willReturn(['x' => 'y']);
 
         $this->client->getContainer()->set('file_manager', $fakeManager);
         $this->client->request('GET', '/files/myfile/meta');
@@ -144,15 +169,11 @@ class DefaultControllerTest extends WebTestCase
             json_decode($this->client->getResponse()->getContent()));
     }
 
-    public function testCreateFileOK()
+    public function testPutFileOK()
     {
         $fakeManager = $this->getMockBuilder(FileManager::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $fakeManager->expects($this->once())
-            ->method('getMeta')
-            ->with('C:\\test\\2.txt')
-            ->willReturn(null);
         $fakeManager->expects($this->once())
             ->method('saveFile')
             ->with($this->anything(), 'C:\\test', '2.txt');
@@ -163,23 +184,17 @@ class DefaultControllerTest extends WebTestCase
         file_put_contents($file, '12345');
         $upload = new UploadedFile($file, '1.txt');
 
-        // Первый раз - ОК
-        $this->client->request('POST', '/files',
-            array('filename' => '2.txt'),
+        $this->client->request('PUT', '/files/2.txt',
             array('content' => $upload)
         );
-        $this->assertEquals(201, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
     }
 
-    public function testCreateFileAlreadyExists()
+    public function testPutFileWrongName()
     {
         $fakeManager = $this->getMockBuilder(FileManager::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $fakeManager->expects($this->once())
-            ->method('getMeta')
-            ->with('C:\\test\\2.txt')
-            ->willReturn(array('dev' => 10));
         $fakeManager->expects($this->never())
             ->method('saveFile');
 
@@ -189,14 +204,10 @@ class DefaultControllerTest extends WebTestCase
         file_put_contents($file, '12345');
         $upload = new UploadedFile($file, '1.txt');
 
-        // Первый раз - ОК
-        $this->client->request('POST', '/files',
-            array('filename' => '2.txt'),
+        $this->client->request('PUT', '/files/ddds',
             array('content' => $upload)
         );
         $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $this->assertEquals(
-            (object) array('error' => 'This file already exists. Please, choose another file name.'),
-            json_decode($this->client->getResponse()->getContent()));
+        $this->assertArrayHasKey('error', json_decode($this->client->getResponse()->getContent()));
     }
 }
