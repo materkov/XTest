@@ -8,9 +8,7 @@
 
 namespace AppBundle\Form;
 
-
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -33,6 +31,7 @@ class InputFileType extends AbstractType
                     new NotBlank(),
                     new Callback(function ($object, ExecutionContextInterface $context, $payload)
                     {
+                        /* Filename validation */
                         if (!preg_match('/^[a-z0-9_\\-]+\\.[a-z0-9_\\-]+$/', $object)) {
                             $context->buildViolation('Invalid filename')
                                 ->atPath('filename')
@@ -41,9 +40,6 @@ class InputFileType extends AbstractType
                     })
                 )
             ));
-            //->add('content', FileType::class, array(
-            //    'constraints' => new NotBlank()
-            //));
     }
 
     public function configureOptions(OptionsResolver $resolver)

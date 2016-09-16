@@ -96,13 +96,9 @@ class FileManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testSaveFile()
     {
-        $fakeManager = $this->getMockBuilder(UploadedFile::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $fakeManager->expects($this->once())
-            ->method('move')
-            ->with('dirdd', 'nname');
-
-        $this->manager->saveFile($fakeManager, 'dirdd', 'nname');
+        $this->manager->saveFile(vfsStream::url('exampleDir/1.txt'), 'inputFileContent__');
+        $this->assertEquals(
+            'inputFileContent__',
+            file_get_contents(vfsStream::url('exampleDir/1.txt')));
     }
 }

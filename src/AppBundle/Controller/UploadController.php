@@ -28,28 +28,34 @@ class UploadController extends Controller
         $form = $this->createForm(InputFileType::class);
         $form->handleRequest($request);
 
+        $content = $request->getContent();
+        if (empty($content)) {
+            $response = new Response(
+                json_encode(array('error' => 'Bad request (body is empty)')),
+                400, array('Content-Type' => 'application/json')
+            );
+            return $response;
+        }
+
         if ($form->isValid()) {
             $manager = $this->get('file_manager');
 
             $fullName = 'C:\\test\\'.$form->getData()['filename'];
             $meta = $manager->getMeta($fullName);
 
-            $manager->saveFile($fullName);
+            $manager->saveFile($fullName, $request->getContent());
 
             $response = new Response('',
                 $meta ? 200 : 201,
-                array('Content-Type' => '/application/json')
+                array('Content-Type' => 'application/json')
             );
             return $response;
         }
         else {
-            $response = array(
-                'error' => 'Bad request',
-                'details' => $form->getErrors()
-            );
+            $response = array('error' => 'Bad request (wrong filename)');
             $response = new Response(json_encode($response),
                 400,
-                array('Content-Type' => '/application/json')
+                array('Content-Type' => 'application/json')
             );
             return $response;
         }

@@ -6,4 +6,4 @@ parameters:
 services:
     file_manager:
         class: AppBundle\Utils\FileManager
-        #arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
+        #arguments: ["%files_dir%"]
