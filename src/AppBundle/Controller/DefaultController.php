@@ -2,29 +2,22 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Form\InputFileType;
 use FOS\RestBundle\Controller\FOSRestController;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\Form\Form;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class DefaultController extends FOSRestController
 {
-    const DIR = 'C:\\test';
-
     public function getFilesAction()
     {
         $manager = $this->get('file_manager');
 
-        return $this->handleView($this->view($manager->listDir(self::DIR)));
+        return $this->handleView($this->view($manager->listDir($this->getParameter('files_dir'))));
     }
 
     public function getFileAction($name)
     {
         $manager = $this->get('file_manager');
-        $fullName = self::DIR.'\\'.$name;
+        $fullName = $this->getParameter('files_dir').DIRECTORY_SEPARATOR.$name;
         $content = $manager->getContent($fullName);
 
         $response = new Response();
@@ -48,7 +41,7 @@ class DefaultController extends FOSRestController
     public function getFileMetaAction($name)
     {
         $manager = $this->get('file_manager');
-        $fullName = self::DIR.'\\'.$name;
+        $fullName = $this->getParameter('files_dir').DIRECTORY_SEPARATOR.$name;
         $meta = $manager->getMeta($fullName);
 
         if ($meta) {

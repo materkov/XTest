@@ -21,6 +21,9 @@ class UploadController extends Controller
     /**
      * @Route("/files/{filename}")
      * @Method("PUT")
+     * @param $filename
+     * @param Request $request
+     * @return array|Response
      */
     public function uploadFileAction($filename, Request $request)
     {
@@ -40,7 +43,7 @@ class UploadController extends Controller
         if ($form->isValid()) {
             $manager = $this->get('file_manager');
 
-            $fullName = 'C:\\test\\'.$form->getData()['filename'];
+            $fullName = $this->getParameter('files_dir').DIRECTORY_SEPARATOR.$form->getData()['filename'];
             $meta = $manager->getMeta($fullName);
 
             $manager->saveFile($fullName, $request->getContent());
