@@ -1,0 +1,93 @@
+#%RAML 0.8
+title: XTest
+version: 1
+baseUri: https://materkov.com
+securitySchemes:
+  - basic:
+      description: |
+        This API needs Basic Authentication.
+      type: Basic Authentication
+
+securedBy: [basic]
+documentation:
+  - title: Xsolla Test API
+    content: |
+      Documentation for my test job at Xsolla.
+
+/files:
+  get:
+    description: Get files list.
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              ["file.txt", "2232.jpg"]
+
+  /{name}:
+    uriParameters:
+      name:
+        required: true
+        description: Name of the file
+        example: 1.txt
+    get:
+      description: Get file content.
+      responses:
+        200:
+          description: |
+            Content of the file, if file exists.
+            `Content-Type` header will be set appropriately.
+        404:
+          description: File not found
+          body:
+            application/json:
+              example: |
+                {"error":"File not found"}
+    put:
+      description: Update or create file. Request body must contain a content of your file.
+      body:
+        binary/octet-stream:
+          example: File Content
+      responses:
+        201:
+          description: File was succesfully uploaded and created
+        200:
+          description: File was succesfully uploaded and replaced existing file
+        400:
+          description: Invalid file name
+          body:
+            application/json:
+              example: |
+                {"error": "Bad request (wrong filename)"}
+
+
+    /meta:
+      get:
+        description: Get meta info for file.
+        responses:
+          200:
+            description: Metainfo for given file
+            body:
+              application/json:
+                example: |
+                  {
+                    "dev": 40,
+                    "ino": 1848,
+                    "mode": 33188,
+                    "nlink": 1,
+                    "uid": 33,
+                    "gid": 33,
+                    "rdev": 0,
+                    "size": 7,
+                    "atime": 1474214000,
+                    "mtime": 1474214000,
+                    "ctime": 1474214908,
+                    "blksize": 4096,
+                    "blocks": 8
+                  }
+          404:
+            description: File not found
+            body:
+              application/json:
+                example: |
+                  {"error":"File not found"}
